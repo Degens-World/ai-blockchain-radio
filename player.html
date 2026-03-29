@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Degens.World Radio</title>
+  <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      background: #0a0a0c;
+      color: #e0e0e0;
+      font-family: 'Courier New', monospace;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: space-between;
+      padding: 40px 20px;
+    }
+
+    /* TOP */
+    .top {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .live-badge {
+      border: 1px solid #7c3aed;
+      border-radius: 999px;
+      padding: 5px 16px;
+      font-size: 0.7rem;
+      letter-spacing: 0.15em;
+      color: #a78bfa;
+      text-transform: uppercase;
+    }
+
+    .title {
+      font-size: clamp(2rem, 6vw, 3.2rem);
+      font-weight: 900;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      line-height: 1;
+    }
+    .title .white { color: #ffffff; }
+    .title .purple { color: #a78bfa; }
+
+    .subtitle {
+      font-size: 0.75rem;
+      letter-spacing: 0.2em;
+      color: #555;
+      text-transform: uppercase;
+    }
+
+    /* VINYL */
+    .vinyl-wrap {
+      position: relative;
+      width: 260px;
+      height: 260px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 20px 0;
+    }
+
+    .vinyl-outer {
+      position: absolute;
+      width: 260px;
+      height: 260px;
+      border-radius: 50%;
+      background: radial-gradient(circle at center, #1a1a24 60%, #12121a 100%);
+      border: 1px solid #2a2a3a;
+    }
+
+    .vinyl-inner {
+      position: absolute;
+      width: 180px;
+      height: 180px;
+      border-radius: 50%;
+      background: radial-gradient(circle at center, #111118 60%, #0e0e16 100%);
+      border: 1px solid #a78bfa44;
+    }
+
+    .vinyl-ring {
+      position: absolute;
+      width: 260px;
+      height: 260px;
+      border-radius: 50%;
+      border: 1.5px solid #a78bfa33;
+      animation: none;
+    }
+
+    .vinyl-ring.spinning {
+      animation: spin 8s linear infinite;
+    }
+
+    @keyframes spin {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
+
+    .vinyl-icon {
+      position: relative;
+      z-index: 2;
+      width: 100px;
+      height: 100px;
+      border-radius: 50%;
+      background: #18181f;
+      border: 1.5px solid #a78bfa66;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.6rem;
+      color: #a78bfa;
+    }
+
+    /* CONTROLS */
+    .controls {
+      background: #111118;
+      border: 1px solid #1e1e2e;
+      border-radius: 16px;
+      padding: 24px 32px;
+      width: 100%;
+      max-width: 320px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .status-line {
+      font-size: 0.7rem;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #ef4444;
+    }
+    .status-dot.live {
+      background: #4ade80;
+      box-shadow: 0 0 6px #4ade8088;
+    }
+
+    .status-text { color: #ef4444; }
+    .status-text.live { color: #4ade80; }
+
+    .play-btn {
+      width: 100%;
+      padding: 16px;
+      background: linear-gradient(135deg, #7c3aed, #a78bfa);
+      border: none;
+      border-radius: 999px;
+      color: #fff;
+      font-family: 'Courier New', monospace;
+      font-size: 0.9rem;
+      font-weight: 700;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      transition: opacity 0.2s;
+    }
+    .play-btn:hover { opacity: 0.85; }
+    .play-btn:active { opacity: 0.7; }
+
+    .play-icon { font-size: 1rem; }
+
+    .volume-row {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .vol-label {
+      font-size: 0.65rem;
+      letter-spacing: 0.12em;
+      color: #444;
+      text-transform: uppercase;
+      white-space: nowrap;
+    }
+
+    input[type="range"] {
+      -webkit-appearance: none;
+      flex: 1;
+      height: 3px;
+      background: #2a2a3a;
+      border-radius: 999px;
+      outline: none;
+    }
+    input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      background: #a78bfa;
+      cursor: pointer;
+    }
+
+    /* BOTTOM */
+    .bottom {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .badges {
+      display: flex;
+      gap: 10px;
+    }
+
+    .badge {
+      border: 1px solid #7c3aed44;
+      border-radius: 999px;
+      padding: 4px 14px;
+      font-size: 0.65rem;
+      letter-spacing: 0.12em;
+      color: #7c3aed;
+      text-transform: uppercase;
+    }
+
+    .footer-text {
+      font-size: 0.65rem;
+      letter-spacing: 0.15em;
+      color: #333;
+      text-transform: uppercase;
+    }
+
+    audio { display: none; }
+  </style>
+</head>
+<body>
+
+  <div class="top">
+    <span class="live-badge">Ergo Blockchain Live</span>
+    <div class="title">
+      <span class="white">DEGENS.</span><span class="purple">WORLD</span><span class="white"> RADIO</span>
+    </div>
+    <p class="subtitle">AI DJ // Live On-Chain Ergo Commentary</p>
+  </div>
+
+  <div class="vinyl-wrap">
+    <div class="vinyl-outer"></div>
+    <div class="vinyl-ring" id="vinylRing"></div>
+    <div class="vinyl-inner"></div>
+    <div class="vinyl-icon">
+      <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="12" r="2"/>
+        <path d="M16.24 7.76a6 6 0 0 1 0 8.49"/>
+        <path d="M7.76 7.76a6 6 0 0 0 0 8.49"/>
+        <path d="M19.07 4.93a10 10 0 0 1 0 14.14"/>
+        <path d="M4.93 4.93a10 10 0 0 0 0 14.14"/>
+      </svg>
+    </div>
+  </div>
+
+  <div class="controls">
+    <div class="status-line">
+      <div class="status-dot" id="statusDot"></div>
+      <span class="status-text" id="statusText">OFFLINE</span>
+    </div>
+    <button class="play-btn" id="playBtn" onclick="togglePlay()">
+      <span class="play-icon" id="playIcon">▶</span>
+      <span id="playLabel">START LISTENING</span>
+    </button>
+    <div class="volume-row">
+      <span class="vol-label">Master Volume</span>
+      <input type="range" min="0" max="1" step="0.01" value="0.8" id="volSlider" oninput="setVolume(this.value)">
+    </div>
+  </div>
+
+  <div class="bottom">
+    <div class="badges">
+      <span class="badge">ID: AI_COMMENTARY_V1</span>
+      <span class="badge">NETWORK: ERGO_MAINNET</span>
+    </div>
+    <p class="footer-text">&copy; 2026 DEGENS.WORLD &mdash; BUILT ON ERGO</p>
+  </div>
+
+  <audio id="player" preload="none"></audio>
+
+  <script>
+    const STREAM = window.location.origin + "/stream.m3u8";
+    const audio = document.getElementById("player");
+    const statusDot = document.getElementById("statusDot");
+    const statusText = document.getElementById("statusText");
+    const playIcon = document.getElementById("playIcon");
+    const playLabel = document.getElementById("playLabel");
+    const vinylRing = document.getElementById("vinylRing");
+    let hls = null;
+    let playing = false;
+
+    function setLive(isLive) {
+      if (isLive) {
+        statusDot.classList.add("live");
+        statusText.classList.add("live");
+        statusText.textContent = "LIVE";
+        vinylRing.classList.add("spinning");
+      } else {
+        statusDot.classList.remove("live");
+        statusText.classList.remove("live");
+        statusText.textContent = "OFFLINE";
+        vinylRing.classList.remove("spinning");
+      }
+    }
+
+    function setPlaying(state) {
+      playing = state;
+      if (state) {
+        playIcon.textContent = "■";
+        playLabel.textContent = "STOP";
+      } else {
+        playIcon.textContent = "▶";
+        playLabel.textContent = "START LISTENING";
+        setLive(false);
+      }
+    }
+
+    function startStream() {
+      if (Hls.isSupported()) {
+        if (hls) { hls.destroy(); }
+        hls = new Hls({
+          lowLatencyMode: true,
+          xhrSetup: function(xhr) {
+            xhr.setRequestHeader("ngrok-skip-browser-warning", "true");
+          }
+        });
+        hls.loadSource(STREAM);
+        hls.attachMedia(audio);
+        hls.on(Hls.Events.MANIFEST_PARSED, () => {
+          audio.play();
+          setLive(true);
+        });
+        hls.on(Hls.Events.ERROR, (_, data) => {
+          if (data.fatal) {
+            setLive(false);
+            statusText.textContent = "RECONNECTING...";
+            setTimeout(() => { if (playing) startStream(); }, 5000);
+          }
+        });
+      } else if (audio.canPlayType("application/vnd.apple.mpegurl")) {
+        audio.src = STREAM;
+        audio.play();
+        setLive(true);
+      } else {
+        statusText.textContent = "USE CHROME OR VLC";
+      }
+    }
+
+    function togglePlay() {
+      if (!playing) {
+        setPlaying(true);
+        startStream();
+      } else {
+        setPlaying(false);
+        if (hls) { hls.destroy(); hls = null; }
+        audio.pause();
+        audio.src = "";
+      }
+    }
+
+    function setVolume(val) {
+      audio.volume = parseFloat(val);
+    }
+
+    audio.volume = 0.8;
+  </script>
+</body>
+</html>
