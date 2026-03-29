@@ -53,7 +53,7 @@ ngrok config add-authtoken YOUR_TOKEN
 ## Installation
 
 ```bash
-git clone https://github.com/ArOhBeK/ai-blockchain-radio.git
+git clone https://github.com/Degens-World/ai-blockchain-radio.git
 cd ai-blockchain-radio
 pip install -r requirements.txt
 cp .env.example .env
