@@ -1,0 +1,11 @@
+.env
+__pycache__/
+*.py[cod]
+hls_output/seg*.ts
+hls_output/stream.m3u8
+clips/
+music_library/
+*.wav
+*.mp3
+venv/
+.venv/

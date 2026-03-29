@@ -1,0 +1,12 @@
+requests
+kokoro
+soundfile
+numpy
+python-dotenv
+scipy
+
+# Optional — AI music generation (requires CUDA GPU)
+# torch
+# torchaudio
+# transformers
+# accelerate
